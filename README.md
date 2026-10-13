@@ -50,7 +50,7 @@ docker compose logs -f mitmproxy
 
 - **WiFi → Proxy → Manual**:
   - Hostname: la IP del server donde corre (ej. `192.168.1.4`)
-  - Puerto: `8080`
+  - Puerto: `3128` (default, configurable via `PROXY_PORT` en `.env`)
 - Abrir navegador y entrar a `http://mitm.it` o `http://<ip-del-server>:8081`
 - Descargar e instalar el certificado
 - Aceptar cuando Android pida confirmación
