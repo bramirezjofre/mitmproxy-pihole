@@ -1,36 +1,51 @@
 :8080 {
-    root * /srv/onboarding
     encode gzip
 
-    # Página principal: instrucciones
-    handle / {
-        try_files /index.html
+    # Inyectar variables de entorno en cada página HTML servida
+    @html path / /index.html
+    handle @html {
+        root * /srv/onboarding
+        header Content-Type text/html
+        rewrite * /index.html
+        file_server
     }
 
-    # Descarga del certificado (Android)
+    # Descarga del certificado (Android, formato .pem)
     handle /cert/android {
+        root * /home/mitmproxy/.mitmproxy
         header Content-Type application/x-pem-file
         header Content-Disposition "attachment; filename=mitmproxy-ca-cert.pem"
-        respond /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
-    }
-
-    # Descarga del certificado (iOS/macOS)
-    handle /cert/ios {
-        header Content-Type application/x-pem-file
-        header Content-Disposition "attachment; filename=mitmproxy-ca-cert.pem"
-        respond /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+        rewrite * /mitmproxy-ca-cert.pem
+        file_server
     }
 
     # Cert en formato .crt (lo que pide Android directamente)
     handle /cert/android.crt {
+        root * /home/mitmproxy/.mitmproxy
         header Content-Type application/x-x509-ca-cert
         header Content-Disposition "attachment; filename=mitmproxy-ca-cert.crt"
-        respond /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+        rewrite * /mitmproxy-ca-cert.pem
+        file_server
+    }
+
+    # Descarga del certificado (iOS/macOS)
+    handle /cert/ios {
+        root * /home/mitmproxy/.mitmproxy
+        header Content-Type application/x-pem-file
+        header Content-Disposition "attachment; filename=mitmproxy-ca-cert.pem"
+        rewrite * /mitmproxy-ca-cert.pem
+        file_server
     }
 
     # Healthcheck
     handle /health {
         respond "OK" 200
+    }
+
+    # Fallback
+    handle /* {
+        root * /srv/onboarding
+        file_server
     }
 
     log {

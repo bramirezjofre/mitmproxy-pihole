@@ -157,11 +157,13 @@
   </div>
 
   <script>
-    // Reemplazar placeholders con valores del environment (Caddy lo hace,
-    // pero dejamos un fallback por si se sirve estático)
+    // Reemplazar placeholders con valores reales del entorno.
+    // El puerto se inyecta via window.__PROXY_PORT__ desde Caddy (en producción)
+    // o se detecta del location.hostname (en desarrollo).
     const SERVER_IP = window.location.hostname;
+    const PROXY_PORT = window.__PROXY_PORT__ || "3128";
     document.getElementById('server-ip').textContent = SERVER_IP;
-    // El puerto se mantiene visible (8080 default)
+    document.getElementById('proxy-port').textContent = PROXY_PORT;
   </script>
 </body>
 </html>
