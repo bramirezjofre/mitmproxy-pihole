@@ -1,0 +1,39 @@
+:8080 {
+    root * /srv/onboarding
+    encode gzip
+
+    # Página principal: instrucciones
+    handle / {
+        try_files /index.html
+    }
+
+    # Descarga del certificado (Android)
+    handle /cert/android {
+        header Content-Type application/x-pem-file
+        header Content-Disposition "attachment; filename=mitmproxy-ca-cert.pem"
+        respond /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+    }
+
+    # Descarga del certificado (iOS/macOS)
+    handle /cert/ios {
+        header Content-Type application/x-pem-file
+        header Content-Disposition "attachment; filename=mitmproxy-ca-cert.pem"
+        respond /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+    }
+
+    # Cert en formato .crt (lo que pide Android directamente)
+    handle /cert/android.crt {
+        header Content-Type application/x-x509-ca-cert
+        header Content-Disposition "attachment; filename=mitmproxy-ca-cert.crt"
+        respond /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+    }
+
+    # Healthcheck
+    handle /health {
+        respond "OK" 200
+    }
+
+    log {
+        level INFO
+    }
+}

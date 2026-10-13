@@ -1,0 +1,23 @@
+# Secrets - NUNCA commitear
+.env
+*.pem
+*.key
+*.crt
+mitmproxy-ca-cert*
+
+# Volúmenes de Docker
+mitmproxy-data/
+
+# Cert generados por mitmproxy al primer arranque
+.mitmproxy/
+.mitmproxy-data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/

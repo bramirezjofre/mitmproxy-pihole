@@ -1,0 +1,61 @@
+name: mitmproxy-pihole
+
+services:
+  # === mitmproxy como proxy transparente HTTP/HTTPS ===
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    container_name: mitmproxy
+    restart: unless-stopped
+    ports:
+      # HTTP+HTTPS proxy
+      - "${PROXY_PORT:-8080}:8080"
+      # Web UI (opcional)
+      - "8082:8082"
+    volumes:
+      # Certs persistentes (generados al primer arranque)
+      - mitmproxy-data:/home/mitmproxy/.mitmproxy
+      # Addon Python que fuerza DNS al Pi-hole
+      - ./mitmproxy:/home/mitmproxy/addons:ro
+    environment:
+      # Forzar DNS al Pi-hole para que el proxy use ese resolver
+      - PIHOLE_DNS=${PIHOLE_DNS:-192.168.1.3}
+      - PIHOLE_DNS_PORT=${PIHOLE_DNS_PORT:-53}
+    dns:
+      # Sobrescribe el resolver del container: TODO va al Pi-hole
+      - ${PIHOLE_DNS:-192.168.1.3}
+    command: >
+      mitmdump
+      --set confdir=/home/mitmproxy/.mitmproxy
+      --set block_global=false
+      --set listen_port=8080
+      --set web_port=8082
+      --set web_open_browser=false
+      --scripts /home/mitmproxy/addons/force_pihole_dns.py
+      --showhost
+    healthcheck:
+      test: ["CMD", "mitmdump", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # === Caddy como portal de onboarding ===
+  # Sirve una página web con instrucciones + descarga del cert
+  caddy:
+    image: caddy:2-alpine
+    container_name: mitmproxy-onboarding
+    restart: unless-stopped
+    ports:
+      - "${ONBOARDING_PORT:-8081}:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./onboarding:/srv/onboarding:ro
+      # Compartimos el cert generado por mitmproxy
+      - mitmproxy-data:/home/mitmproxy/.mitmproxy:ro
+    environment:
+      - SERVER_IP=${SERVER_IP:-192.168.1.4}
+      - PROXY_PORT=${PROXY_PORT:-8080}
+      - ONBOARDING_PORT=${ONBOARDING_PORT:-8081}
+
+volumes:
+  mitmproxy-data:
+    driver: local
